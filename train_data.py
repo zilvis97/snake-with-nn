@@ -8,7 +8,7 @@ def generate_training_data(display, clock):
 	avg_score = 0
 	training_data_x = []
 	training_data_y = [] 	# of strudture [left, front, right]
-	games = 200
+	games = 1000
 	max_steps = 2000
 
 	for i in tqdm(range(games)):
@@ -18,20 +18,35 @@ def generate_training_data(display, clock):
 
 		while snake.moves and not snake.dead:
 		# for _ in range(max_steps):
+			initial_distance_to_apple = snake.food_distance_from_snake()
 			angle_with_apple, apple_direction_vector_normalized, snake_direction_vector_normalized = snake.get_angle_with_apple()
 			turn_direction, turn_direction_vector = snake.generate_direction(angle_with_apple)	# direction that should be turned next based on apple position
 			current_direction_vector, is_front_blocked, is_left_blocked, is_right_blocked = snake.blocked_directions()
 
-			turn_direction, turn_direction_vector, training_data_y = generate_training_data_y(snake, turn_direction, turn_direction_vector, is_front_blocked, is_left_blocked, is_right_blocked, training_data_y)
+			# turn_direction, turn_direction_vector, training_data_y = generate_training_data_y(snake, turn_direction, turn_direction_vector, is_front_blocked, is_left_blocked, is_right_blocked, training_data_y)
 
 			if is_right_blocked and is_left_blocked and is_front_blocked:
 				break
 
-			training_data_x.append([score,
-				is_left_blocked, is_front_blocked, is_right_blocked, apple_direction_vector_normalized[0], apple_direction_vector_normalized[1], \
-				snake_direction_vector_normalized[0], snake_direction_vector_normalized[1]])
+			# new input training data sample
+			training_data_x.append([is_left_blocked, is_front_blocked, is_right_blocked, angle_with_apple, turn_direction])
+
+			# training_data_x.append([score,
+			# 	is_left_blocked, is_front_blocked, is_right_blocked, apple_direction_vector_normalized[0], apple_direction_vector_normalized[1], \
+			# 	snake_direction_vector_normalized[0], snake_direction_vector_normalized[1]])
+
 			snake = snake.play_game(turn_direction_vector, display, clock)
-		score = snake.score
+			distance_to_apple = snake.food_distance_from_snake()
+			if snake.dead or snake.moves == 0:
+				training_data_y.append([-1])
+			else:
+				if distance_to_apple < initial_distance_to_apple or snake.score > score:
+					training_data_y.append([1])
+				else:
+					training_data_y.append([0])
+
+			score = snake.score
+
 		print("LENGTH = {}, SCORE = {}".format(snake.length, score))
 		max_score = max(score, max_score)
 		avg_score += score

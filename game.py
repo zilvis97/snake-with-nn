@@ -22,7 +22,7 @@ black = (0, 0, 0)
 class Snake:
 	def __init__(self):
 		self.reset()
-		self.moves = 500
+		self.moves = 1000
 		self.color = (0, 255, 15)
 		self.dead = False
 		self.reward = 20
@@ -30,10 +30,16 @@ class Snake:
 	def reset(self):
 		self.dead = False
 		self.score = 0
-		self.length = 2
+		self.length = 3
 		self.direction = random.choice([up, right, down, left])
-		self.positions = [((width / 2), (height / 2))]
-		self.positions.append((self.positions[0][0] - (self.direction[0] * block_size), self.positions[0][1] - (self.direction[1] * block_size)))
+		x = height / 2
+		y = width / 2
+		self.positions = []
+		for i in range(3):
+			point = ((x + i*block_size), y)
+			self.positions.insert(0, point)
+		# self.positions = [((width / 2), (height / 2))]
+		# self.positions.append((self.positions[0][0] - (self.direction[0] * block_size), self.positions[0][1] - (self.direction[1] * block_size)))
 		self.generate_food()
 
 	def get_head_pos(self):
@@ -120,8 +126,10 @@ class Snake:
 
 		return current_direction_vector, is_front_blocked, is_left_blocked, is_right_blocked
 
-	def food_distance_from_snake(food_pos, snake_head_pos):
-		return np.linalg.norm(np.array(food_pos) - np.array(snake_head_pos))
+	def food_distance_from_snake(self):
+		food_pos = self.food
+		head_pos = self.get_head_pos()
+		return np.linalg.norm(np.array(food_pos) - np.array(head_pos))
 
 	#if angle > 0; move right, if angle < 0 move left, if angle == 0, keep straight
 	def get_angle_with_apple(self):
@@ -130,13 +138,13 @@ class Snake:
 		snake_direction_vector = self.current_direction_vector()
 
 		norm_of_apple_direction_vector = np.linalg.norm(apple_direction_vector) 
-		norm_of_snake_direction_vecttor = np.linalg.norm(snake_direction_vector)
+		norm_of_snake_direction_vector = np.linalg.norm(snake_direction_vector)
 
 		#to avoid division from 0 when apple is in [0, 0]
 		norm_of_apple_direction_vector = norm_of_apple_direction_vector if norm_of_apple_direction_vector != 0 else 1
 
 		apple_direction_vector_normalized = apple_direction_vector / norm_of_apple_direction_vector
-		snake_direction_vector_normalized = snake_direction_vector / norm_of_snake_direction_vecttor
+		snake_direction_vector_normalized = snake_direction_vector / norm_of_snake_direction_vector
 
 		angle = math.atan2(apple_direction_vector_normalized[1] * snake_direction_vector_normalized[0] - apple_direction_vector_normalized[0] * snake_direction_vector_normalized[1], 
 			apple_direction_vector_normalized[1] * snake_direction_vector_normalized[1] + apple_direction_vector_normalized[0] * snake_direction_vector_normalized[0]) / math.pi
@@ -198,7 +206,7 @@ class Snake:
 		pygame.draw.rect(surface, food_color, food)
 
 
-	def play_game(self, turn_direction_vector, display, clock, clock_tick = 50000):
+	def play_game(self, turn_direction_vector, display, clock, clock_tick = 100000):
 		while not self.dead:
 			for event in pygame.event.get():
 				if event.type == pygame.QUIT:
@@ -250,7 +258,6 @@ def draw_border(surface, color, line_width):
 # 		clock.tick(50000)
 
 # 		return snake
-
 
 # if __name__ == "__main__":
 # 	pygame.init()
